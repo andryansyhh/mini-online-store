@@ -10,6 +10,7 @@ import (
 type OlshopHandler interface {
 	SetupHandler(r *gin.Engine)
 	RegisterUser(c *gin.Context)
+	Login(c *gin.Context)
 }
 
 type olshopHandler struct {
@@ -30,5 +31,6 @@ func (m *olshopHandler) SetupHandler(r *gin.Engine) {
 
 	userGroups := r.Group("/user")
 	userGroups.POST("/register", m.RegisterUser)
+	userGroups.POST("/login", m.Login)
 
 }

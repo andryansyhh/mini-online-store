@@ -19,3 +19,10 @@ type LoginUser struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
+
+type LoginResponse struct {
+	Token        string    `json:"token"`
+	UserUuid     string    `json:"user_uuid"`
+	RefreshToken string    `json:"refresh_token"`
+	ExpiredToken time.Time `json:"expired_token"`
+}

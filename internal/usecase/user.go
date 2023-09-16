@@ -2,27 +2,33 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
 	"mini-online-store/helpers"
 	"mini-online-store/internal/domain/dto"
+	"mini-online-store/internal/domain/models"
 	"mini-online-store/internal/repository"
 	"time"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserUsecase interface {
 	RegisterUser(req *dto.RegisterUser) error
+	Login(req *dto.LoginUser) (*dto.LoginResponse, error)
+	GetToken(userModel *models.User) (*dto.UserTokenDto, error)
+	LoginCreateToken(user *models.User) (*dto.UserTokenDto, error)
 }
 
 type userUsecase struct {
-	userRepository repository.UserRepository
-	// inquiryRepository             repository.InquiryRepository
-	// paymentNotificationRepository repository.PaymentNotificationRepository
+	userRepository      repository.UserRepository
+	userTokenRepository repository.UserTokenRepository
 }
 
-func NewUserUsecase(userRepo repository.UserRepository) UserUsecase {
+func NewUserUsecase(userRepo repository.UserRepository, userTknRepo repository.UserTokenRepository) UserUsecase {
 	return &userUsecase{
-		userRepository: userRepo,
+		userRepository:      userRepo,
+		userTokenRepository: userTknRepo,
 	}
 }
 
@@ -76,4 +82,68 @@ func (u *userUsecase) RegisterUser(req *dto.RegisterUser) error {
 
 	}
 	return nil
+}
+
+func (u *userUsecase) Login(req *dto.LoginUser) (*dto.LoginResponse, error) {
+	userRes, err := u.userRepository.Login(req.Email)
+	if err != nil {
+		return nil, errors.New("error login")
+	}
+	if userRes.Uuid == "" {
+		return nil, errors.New("user not found")
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(userRes.Password), []byte(req.Password))
+	if err != nil {
+		return nil, errors.New("invalid password")
+	}
+
+	tkn, err := u.GetToken(userRes)
+	if err != nil {
+		return nil, errors.New("error get token")
+	}
+
+	return &dto.LoginResponse{
+		Token:        tkn.Token,
+		RefreshToken: tkn.RefreshToken,
+		ExpiredToken: tkn.RefreshTokenExpiredAt,
+		UserUuid:     userRes.Uuid,
+	}, nil
+}
+
+func (u *userUsecase) GetToken(userModel *models.User) (*dto.UserTokenDto, error) {
+	existingToken, err := u.userTokenRepository.GetLastToken(userModel.Uuid)
+	if err != nil {
+		return nil, errors.New("error get last token")
+	}
+	if existingToken != nil {
+		return existingToken, nil
+	}
+	tkn, err := u.LoginCreateToken(userModel)
+	if err != nil {
+		return nil, errors.New("error create token")
+	}
+	return tkn, nil
+}
+
+func (u *userUsecase) LoginCreateToken(user *models.User) (*dto.UserTokenDto, error) {
+	modelUserToken := models.UserToken{
+		UserUuid: user.Uuid,
+		Token: helpers.HashToken(fmt.Sprintf("%s%s%s",
+			user.Uuid,
+			uuid.New().String(),
+			time.Now().String())),
+		RefreshToken: helpers.HashToken(fmt.Sprintf("%s%s%s",
+			user.Uuid,
+			uuid.New().String(),
+			time.Now().String())),
+		TokenExpiredAt:        time.Now().AddDate(0, 0, 30),
+		RefreshTokenExpiredAt: time.Now().AddDate(1, 0, 0),
+	}
+	tkn, err := u.userTokenRepository.CreateUserToken(&modelUserToken)
+
+	if err != nil {
+		return nil, errors.New("failed to create user token")
+	}
+	return tkn, nil
 }
