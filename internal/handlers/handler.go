@@ -12,17 +12,22 @@ type OlshopHandler interface {
 	RegisterUser(c *gin.Context)
 	Login(c *gin.Context)
 	GetProduct(c *gin.Context)
+	AddToCart(c *gin.Context)
+	DeleteCart(c *gin.Context)
+	ListItemInCart(c *gin.Context)
 }
 
 type olshopHandler struct {
-	userUsecase    usecase.UserUsecase
-	productUsecase usecase.ProductUsecase
+	userUsecase         usecase.UserUsecase
+	productUsecase      usecase.ProductUsecase
+	shoppingCartUsecase usecase.ShoppingCartUsecase
 }
 
-func NewOlshopHandler(userUsecase usecase.UserUsecase, productUsecase usecase.ProductUsecase) OlshopHandler {
+func NewOlshopHandler(userUsecase usecase.UserUsecase, productUsecase usecase.ProductUsecase, shoppingCartUsecase usecase.ShoppingCartUsecase) OlshopHandler {
 	return &olshopHandler{
-		userUsecase:    userUsecase,
-		productUsecase: productUsecase,
+		userUsecase:         userUsecase,
+		productUsecase:      productUsecase,
+		shoppingCartUsecase: shoppingCartUsecase,
 	}
 }
 
@@ -40,4 +45,9 @@ func (m *olshopHandler) SetupHandler(r *gin.Engine) {
 	productGroup.GET("/all-products", m.GetProduct)
 	productGroup.GET("/all-products/:category", m.GetProductByCategory)
 
+	cartGroup := r.Group("/cart")
+	cartGroup.Use(m.TokenChecker)
+	cartGroup.POST("/add-to-cart", m.AddToCart)
+	cartGroup.GET("/list-cart", m.ListItemInCart)
+	cartGroup.DELETE("/remove-product/:cart_uuid", m.DeleteCart)
 }

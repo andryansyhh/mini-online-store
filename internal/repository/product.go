@@ -13,6 +13,7 @@ type Product struct {
 type ProductRepository interface {
 	GetListProducts() ([]dto.ProductResponse, error)
 	GetListProductsByCategory(category string) ([]dto.ProductResponse, error)
+	FindProductByUuid(uuid string) (*dto.ProductResponse, error)
 }
 
 func NewProductRepository(db *gorm.DB) Product {
@@ -44,4 +45,15 @@ func (m *Product) GetListProductsByCategory(category string) ([]dto.ProductRespo
 		return nil, err
 	}
 	return res, nil
+}
+
+func (m *Product) FindProductByUuid(uuid string) (*dto.ProductResponse, error) {
+	var res dto.ProductResponse
+	err := m.db.Table("product").Debug().
+		Where("uuid = ?", uuid).
+		Find(&res).Error
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
