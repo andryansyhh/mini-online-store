@@ -4,8 +4,10 @@ package main
 import (
 	"fmt"
 	"log"
+	"mini-online-store/cmd"
 	config "mini-online-store/config/database"
-	"mini-online-store/internal/routers"
+	"mini-online-store/db/migrations"
+
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +23,8 @@ func main() {
 	router := gin.Default()
 	db := config.GetDatabase()
 
-	routers.SetupRoutes(router, db)
+	cmd.SetupRouters(router, db)
+	migrations.Run(db)
 
 	port := os.Getenv("app_port")
 	router.Run(fmt.Sprintf(":%s", port))
