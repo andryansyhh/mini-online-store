@@ -15,6 +15,7 @@ type UserToken struct {
 type UserTokenRepository interface {
 	CreateUserToken(userToken *models.UserToken) (*dto.UserTokenDto, error)
 	GetLastToken(user_uuid string) (*dto.UserTokenDto, error)
+	FindByToken(token string) (*models.UserToken, error)
 }
 
 func NewUserTokenRepository(db *gorm.DB) UserToken {
@@ -51,4 +52,16 @@ func (u *UserToken) GetLastToken(user_uuid string) (*dto.UserTokenDto, error) {
 		return nil, err
 	}
 	return &token, nil
+}
+
+func (u *UserToken) FindByToken(token string) (*models.UserToken, error) {
+	var resp models.UserToken
+	err := u.db.Debug().Table("user_token").Preload("User").Where("token = ? AND token_expired_at > ?",
+		token,
+		time.Now()).
+		First(&resp).Error
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
 }

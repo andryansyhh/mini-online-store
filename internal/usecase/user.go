@@ -18,6 +18,7 @@ type UserUsecase interface {
 	Login(req *dto.LoginUser) (*dto.LoginResponse, error)
 	GetToken(userModel *models.User) (*dto.UserTokenDto, error)
 	LoginCreateToken(user *models.User) (*dto.UserTokenDto, error)
+	Auth(req *dto.AuthRequest) (*dto.AuthResponse, error)
 }
 
 type userUsecase struct {
@@ -146,4 +147,16 @@ func (u *userUsecase) LoginCreateToken(user *models.User) (*dto.UserTokenDto, er
 		return nil, errors.New("failed to create user token")
 	}
 	return tkn, nil
+}
+
+func (u *userUsecase) Auth(req *dto.AuthRequest) (*dto.AuthResponse, error) {
+	userTkn, err := u.userTokenRepository.FindByToken(req.Token)
+	if err != nil {
+		return nil, errors.New("unauthorized")
+	}
+	return &dto.AuthResponse{
+		UserUuid: userTkn.UserUuid,
+		Email:    userTkn.User.Email,
+		Phone:    userTkn.User.Phone,
+	}, nil
 }
