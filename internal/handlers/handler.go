@@ -11,15 +11,18 @@ type OlshopHandler interface {
 	SetupHandler(r *gin.Engine)
 	RegisterUser(c *gin.Context)
 	Login(c *gin.Context)
+	GetProduct(c *gin.Context)
 }
 
 type olshopHandler struct {
-	userUsecase usecase.UserUsecase
+	userUsecase    usecase.UserUsecase
+	productUsecase usecase.ProductUsecase
 }
 
-func NewOlshopHandler(userUsecase usecase.UserUsecase) OlshopHandler {
+func NewOlshopHandler(userUsecase usecase.UserUsecase, productUsecase usecase.ProductUsecase) OlshopHandler {
 	return &olshopHandler{
-		userUsecase: userUsecase,
+		userUsecase:    userUsecase,
+		productUsecase: productUsecase,
 	}
 }
 
@@ -32,5 +35,9 @@ func (m *olshopHandler) SetupHandler(r *gin.Engine) {
 	userGroups := r.Group("/user")
 	userGroups.POST("/register", m.RegisterUser)
 	userGroups.POST("/login", m.Login)
+
+	productGroup := r.Group("/product")
+	productGroup.GET("/all-products", m.GetProduct)
+	productGroup.GET("/all-products/:category", m.GetProductByCategory)
 
 }

@@ -14,10 +14,6 @@ type User struct {
 type UserRepository interface {
 	CreateUser(userToCreate *dto.RegisterUser) error
 	Login(email string) (*models.User, error)
-	// FindByTopupUuid(topup_uuid string) (*dto.FaspayUser, error)
-	// GetActiveTransaction(user_uuid string) (*dto.FaspayTrxModel, error)
-	// FindTransactionByTrxId(trx_id string, amount float64) (*dto.FaspayTrxModel, error)
-	// SetPaidTransaction(trx_id string) error
 }
 
 func NewUserRepository(db *gorm.DB) User {
