@@ -27,5 +27,6 @@ func main() {
 	migrations.Run(db)
 
 	port := os.Getenv("app_port")
-	router.Run(fmt.Sprintf(":%s", port))
+	host := os.Getenv("app_host")
+	router.Run(fmt.Sprintf("%s:%s", host, port))
 }
