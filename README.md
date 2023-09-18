@@ -107,8 +107,8 @@ Mini olshop Service
 | `product_uuid` | `string` | **Required**. uuid from list product|
 | `price` | `string` | **Required**. price from list product|
 ----
-## Screenshots
+## ERD
 
-![App Screenshot](![Untitled Diagram](https://github.com/andryansyhh/mini-online-store/assets/80319764/8b8f32ac-db1d-44ec-8204-082c32f3001b)
+![ERD](![Untitled Diagram](https://github.com/andryansyhh/mini-online-store/assets/80319764/8b8f32ac-db1d-44ec-8204-082c32f3001b)
 )
 
